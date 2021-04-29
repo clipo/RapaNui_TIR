@@ -1,0 +1,41 @@
+---
+title: "Rapa Nui TIR"
+output: html_notebook
+---
+
+This file includes the R script for generating figure X from the DiNapoli et al (2021) paper, Thermal imaging shows submarine groundwater discharge plumes associated with ancient settlements on Rapa Nui (Easter Island, Chile) to be published in the journal Remote Sensing. 
+
+First, load libraries and read in the CSV data file.
+```{r}
+library(ggplot2)
+library(here)
+library(sp)
+library(rgdal)
+library(lubridate)
+library(scales)
+library(gridExtra)
+
+EMIdata <- read.csv(file = here("data/rapanui_emi.csv"), stringsAsFactors = TRUE)
+```
+
+Now convert locations to UTMs
+```{r }
+
+coord.dec = SpatialPoints(cbind(-EMIdata$X, EMIdata$Y), proj4string=CRS("+proj=longlat"))
+coord.utm <- spTransform(coord.dec, CRS("+init=epsg:31997"))
+
+# rename the coords from original name to new wanted name
+colnames(coord.utm@coords) <- c("X_meters","Y_meters")
+# extract as data frame, new coords with new name are new columns. 
+data <- as.data.frame(coord.utm)
+new_data <- cbind(EMIdata, data)
+
+emi_plot<- ggplot(data=new_data, mapping=aes(TIME, Conductivity.16.kHz)) +
+           geom_point(color="blue", size=1, pch=20)+
+  scale_x_discrete(guide = guide_axis(check.overlap = TRUE))
+plot(emi_plot)
+
+```
+
+
+ggsave(path = path, width = width, height = height, device='tiff', dpi=700)
