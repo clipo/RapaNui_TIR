@@ -28,12 +28,44 @@ coord.utm <- spTransform(coord.dec, CRS("+init=epsg:31997"))
 colnames(coord.utm@coords) <- c("X_meters","Y_meters")
 # extract as data frame, new coords with new name are new columns. 
 data <- as.data.frame(coord.utm)
-new_data <- cbind(EMIdata, data)
+data <- cbind(EMIdata, data)
+
+distance <- sqrt((data$X_meters[1]-data$X_meters)^2+(data$Y_meters[1]-data$Y_meters))
+new_data <- cbind(data,distance)
 
 emi_plot<- ggplot(data=new_data, mapping=aes(TIME, Conductivity.16.kHz)) +
            geom_point(color="blue", size=1, pch=20)+
   scale_x_discrete(guide = guide_axis(check.overlap = TRUE))
 plot(emi_plot)
+
+emi_plot.d<- ggplot(data=new_data, mapping=aes(distance, Conductivity.16.kHz)) +
+           geom_point(color="blue", size=1, pch=20)
+plot(emi_plot.d)
+
+
+maxColorValue <- max(new_data$Conductivity.16.kHz)
+palette <- colorRampPalette(c("green","red"))(maxColorValue)
+
+with(new_data, plot(X, Y, pch=19, asp=1, col=palette[cut(Conductivity.16.kHz, maxColorValue)]))
+
+with(new_data, plot(X_meters, Y_meters, pch=19, asp=1, col=palette[cut(Conductivity.16.kHz, maxColorValue)] ))
+
+ggplot(data=new_data, aes(x=X_meters, y=Y_meters, color=Conductivity.16.kHz)) +
+  geom_point()+
+  coord_fixed()+
+  scale_x_discrete(guide = guide_axis(check.overlap = TRUE))
+
+with(new_data, plot(TIME, Conductivity.16.kHz, pch=19, col=palette[cut(Conductivity.16.kHz, maxColorValue)]))
+  
+ggplot(data=new_data, aes(x=TIME, y=Conductivity.16.kHz, color=Conductivity.16.kHz)) +
+  geom_point()+
+  #coord_fixed()+
+  scale_x_discrete(guide = guide_axis(check.overlap = TRUE))
+
+ggplot(data=new_data, aes(x=distance, y=Conductivity.16.kHz, color=Conductivity.16.kHz)) +
+  geom_point()
+  #coord_fixed()+
+  #scale_x_discrete(guide = guide_axis(check.overlap = TRUE))
 
 ```
 
